@@ -4,12 +4,11 @@ A Home Assistant custom component for monitoring cross-country ski trail conditi
 
 ## Features
 
-- Monitor ski trail segment status in real-time
+- Monitor ski trail segment status
 - Track trail preparation time
-- View preparation symbols (trail condition indicators)
 - Get warning messages for trail conditions
-- Automatic updates every 10 minutes
-- Support for updating bearer tokens without re-adding the integration
+- Automatic updates every 15 minutes
+
 
 ## Installation
 
@@ -38,20 +37,19 @@ A Home Assistant custom component for monitoring cross-country ski trail conditi
 
 Before setting up the integration, you need:
 
-1. **Slope ID**: Find this at [sporet.no](https://sporet.no/)
+1. **Ski Trail Segment ID**: Find this at [sporet.no](https://sporet.no/)
    - Navigate to your desired ski trail
-   - The slope ID is typically found in the URL or on the trail details page
-   - Example: For "Heistadmoen 10 km", the slope ID is `10550`
+   - Select a segment in the map
+   - Click the `Share` button
+   - Extract the segment id from the copied URL
 
-2. **Bearer Token**: Obtain from your Sporet account
+
+2. **Bearer Token**:
    - Log in to sporet.no
-   - Navigate to your account settings or API access section
-   - Generate or copy your bearer token
-   - Keep this token secure
+   - Open the network anaylser in the developer tools of the browser
+   - Find the `details` traffic, find the `authorization` attribute in the header section
+   - Copy the token (remove the `Bearer` text)
 
-3. **Ski Trail Segment ID**: Find this by inspecting the API response or trail details
-   - Example segment IDs: `117649`, `117651`, etc.
-   - Each slope contains multiple segments representing different trail sections
 
 ### Setup Steps
 
@@ -59,7 +57,6 @@ Before setting up the integration, you need:
 2. Click **+ Add Integration**
 3. Search for "Sporet"
 4. Enter your configuration:
-   - **Slope ID**: The slope identifier from sporet.no
    - **Ski Trail Segment ID**: The specific segment you want to monitor
    - **Bearer Token**: Your API authentication token
 5. Click **Submit**
@@ -71,13 +68,13 @@ The integration will validate your credentials and create sensors for the specif
 The integration creates three sensors for each configured trail segment:
 
 ### 1. Prepped Time
-- **Entity ID**: `sensor.<slope_name>_<segment_id>_prepped_time`
+- **Entity ID**: `sensor.<destination_name>_<slope_name>_prepped_time`
 - **Description**: Timestamp of when the trail was last prepared
 - **Device Class**: Timestamp
 - **Example**: `2025-12-01T09:06:12Z`
 
 ### 2. Prep Symbol
-- **Entity ID**: `sensor.<slope_name>_<segment_id>_prep_symbol`
+- **Entity ID**: `sensor.<destination_name>_<slope_name>_prep_symbol`
 - **Description**: Numeric code indicating trail condition
 - **Values**:
   - `40`: Good condition
@@ -86,7 +83,7 @@ The integration creates three sensors for each configured trail segment:
 - **Example**: `40`
 
 ### 3. Warning Text
-- **Entity ID**: `sensor.<slope_name>_<segment_id>_warning_text`
+- **Entity ID**: `sensor.<destination_name>_<slope_name>_warning_text`
 - **Description**: Warning message about trail conditions
 - **Example**: `null` (no warnings) or text describing issues
 
@@ -127,16 +124,16 @@ automation:
   - alias: "Notify when trail is groomed"
     trigger:
       - platform: state
-        entity_id: sensor.heistadmoen_10_km_117649_prepped_time
+        entity_id: sensor.sjusjoen_ljosheim_kort_prepped_time
     condition:
       - condition: template
         value_template: >
-          {{ (now() - states.sensor.heistadmoen_10_km_117649_prepped_time.state | as_datetime).total_seconds() < 3600 }}
+          {{ (now() - states.sensor.sjusjoen_ljosheim_kort_prepped_time.state | as_datetime).total_seconds() < 3600 }}
     action:
       - service: notify.mobile_app
         data:
           title: "Trail Groomed!"
-          message: "Heistadmoen trail segment 117649 was just groomed."
+          message: "Ljøsheim trail segment was just groomed."
 ```
 
 ### Display trail condition in Lovelace
@@ -145,11 +142,11 @@ automation:
 type: entities
 title: Ski Trail Status
 entities:
-  - entity: sensor.heistadmoen_10_km_117649_prepped_time
+  - entity: sensor.sjusjoen_ljosheim_kort_prepped_time
     name: Last Groomed
-  - entity: sensor.heistadmoen_10_km_117649_prep_symbol
+  - entity: sensor.sjusjoen_ljosheim_kort_prep_symbol
     name: Condition
-  - entity: sensor.heistadmoen_10_km_117649_warning_text
+  - entity: sensor.sjusjoen_ljosheim_kort_warning_text
     name: Warnings
 ```
 
