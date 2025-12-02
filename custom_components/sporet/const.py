@@ -12,4 +12,3 @@ CONF_SEGMENT_ID = "segment_id"
 
 # Attribution
 ATTRIBUTION = "Data provided by Sporet.no"
-
