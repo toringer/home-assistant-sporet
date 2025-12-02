@@ -37,13 +37,13 @@
   },
   "entity": {
     "sensor": {
-      "preppedTime": {
+      "prepped_time": {
         "name": "Prepped Time"
       },
-      "prepSymbol": {
+      "prep_symbol": {
         "name": "Prep Symbol"
       },
-      "warningText": {
+      "warning_text": {
         "name": "Warning Text"
       }
     }

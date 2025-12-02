@@ -22,18 +22,18 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_DESCRIPTIONS = [
     SensorEntityDescription(
-        key="preppedTime",
+        key="prepped_time",
         name="Prepped Time",
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
-        key="prepSymbol",
+        key="prep_symbol",
         name="Prep Symbol",
         icon="mdi:snowflake",
     ),
     SensorEntityDescription(
-        key="warningText",
+        key="warning_text",
         name="Warning Text",
         icon="mdi:alert-outline",
     ),
@@ -107,7 +107,7 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
 
         key = self.entity_description.key
 
-        if key == "preppedTime":
+        if key == "prepped_time":
             prepped_time = segment.get("preppedTime")
             if prepped_time:
                 try:
@@ -118,10 +118,10 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
                     return None
             return None
 
-        if key == "prepSymbol":
+        if key == "prep_symbol":
             return segment.get("prepSymbol")
 
-        if key == "warningText":
+        if key == "warning_text":
             return segment.get("warningText")
 
         return None
