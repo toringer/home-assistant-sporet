@@ -10,3 +10,6 @@ UPDATE_INTERVAL_SECONDS = 900  # 15 minutes
 CONF_BEARER_TOKEN = "bearer_token"
 CONF_SEGMENT_ID = "segment_id"
 
+# Attribution
+ATTRIBUTION = "Data provided by Sporet.no"
+

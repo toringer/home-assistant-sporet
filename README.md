@@ -156,7 +156,7 @@ The integration uses the Sporet public API:
 
 - **Endpoint**: `https://api.sporet.no/loypeapi/public/skiroutes/{slope_id}/details`
 - **Authentication**: Bearer token in Authorization header
-- **Update Interval**: 600 seconds (10 minutes)
+- **Update Interval**: 900 seconds (15 minutes)
 - **Method**: GET
 
 ## Troubleshooting
@@ -198,7 +198,7 @@ This integration includes a development container for easy testing:
 2. Install the "Remote - Containers" extension
 3. Click "Reopen in Container" when prompted
 4. The development Home Assistant instance will start automatically
-5. Access at `http://localhost:9123`
+5. Access at `http://localhost:8123`
 
 ## Support
 

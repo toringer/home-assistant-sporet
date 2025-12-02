@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SEGMENT_ID, DOMAIN
+from .const import ATTRIBUTION, CONF_SEGMENT_ID, DOMAIN
 from .coordinator import SporetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,6 +70,7 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._segment_id = segment_id
         self._attr_unique_id = f"{DOMAIN}_{segment_id}_{description.key}"
+        self._attr_attribution = ATTRIBUTION
 
     @property
     def name(self) -> str:
