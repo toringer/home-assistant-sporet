@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Sporet",
+        "description": "Enter your Sporet API credentials to monitor a ski trail segment. Find the segment ID at sporet.no, and obtain the bearer token from your Sporet account.",
+        "data": {
+          "segment_id": "Ski Trail Segment ID",
+          "bearer_token": "Bearer Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Sporet API. Please check your internet connection and try again.",
+      "invalid_auth": "Invalid bearer token. Please check your token and try again.",
+      "unknown": "Unexpected error occurred. Please check the logs for more details."
+    },
+    "abort": {
+      "already_configured": "This segment is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Sporet Bearer Token",
+        "description": "Update your bearer token for the Sporet API. The segment ID cannot be changed.",
+        "data": {
+          "bearer_token": "Bearer Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Sporet API. Please check your internet connection and try again.",
+      "invalid_auth": "Invalid bearer token. Please check your token and try again.",
+      "unknown": "Unexpected error occurred. Please check the logs for more details."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "preppedTime": {
+        "name": "Prepped Time"
+      },
+      "prepSymbol": {
+        "name": "Prep Symbol"
+      },
+      "warningText": {
+        "name": "Warning Text"
+      }
+    }
+  }
+}
+
+

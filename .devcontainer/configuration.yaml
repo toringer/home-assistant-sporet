@@ -1,0 +1,19 @@
+# Home Assistant Development Configuration for Sporet Integration
+
+# Configure a default setup of Home Assistant
+default_config:
+
+# Enable logger with debug for the custom component
+logger:
+  default: info
+  logs:
+    custom_components.sporet: debug
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+# Example configuration for manual testing (optional)
+# You can add your test configuration here
+
+
