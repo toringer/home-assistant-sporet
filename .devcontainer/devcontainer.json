@@ -2,7 +2,7 @@
 // Note that python:0-3.11-bullseye should be used for local arm64/Apple Silicon.
 // Depending on setup, "remoteUser": "vscode", might be preferred to add.
 {
-	"name": "HERU",
+	"name": "Sporet.no",
 	"image": "mcr.microsoft.com/devcontainers/python:3.13",
 	"postCreateCommand": "scripts/setup",
 	"forwardPorts": [
@@ -16,10 +16,10 @@
 				"ryanluker.vscode-coverage-gutters",
 				"ms-python.vscode-pylance",
 				"donjayamanne.githistory",
-        "ms-python.black-formatter",
-        "ms-python.isort",
-        "ms-python.pylint",
-        "charliermarsh.ruff"
+				"ms-python.black-formatter",
+				"ms-python.isort",
+				"ms-python.pylint",
+				"charliermarsh.ruff"
 			],
 			"settings": {
 				"files.eol": "\n",
