@@ -1,7 +1,15 @@
-# Sporet - Home Assistant Integration
+[![home-assistant-sporet](https://img.shields.io/github/release/toringer/home-assistant-sporet.svg?1)](https://github.com/toringer/home-assistant-sporet)
+[![Validate with hassfest](https://github.com/toringer/home-assistant-sporet/workflows/Validate%20with%20hassfest/badge.svg)](https://github.com/toringer/home-assistant-sporet/actions/workflows/hassfest.yaml)
+[![HACS Validation](https://github.com/toringer/home-assistant-sporet/actions/workflows/validate_hacs.yaml/badge.svg)](https://github.com/toringer/home-assistant-sporet/actions/workflows/validate_hacs.yaml)
+[![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)](https://github.com/toringer/home-assistant-sporet)
+[![home-assistant-sporet_downloads](https://img.shields.io/github/downloads/toringer/home-assistant-sporet/total)](https://github.com/toringer/home-assistant-sporet)
+[![home-assistant-sporet_downloads](https://img.shields.io/github/downloads/toringer/home-assistant-sporet/latest/total)](https://github.com/toringer/home-assistant-sporet)
+
+
+# Sporet.no - Home Assistant Integration
 
 <div align="center">
-  <img src="assets/sporet.svg" alt="Sporet Logo" width="200"/>
+  <img src="assets/sporet.svg" alt="Sporet.no Logo" width="200"/>
 </div>
 
 A Home Assistant custom component for monitoring cross-country ski trail conditions from [Sporet.no](https://sporet.no/).
