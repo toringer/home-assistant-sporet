@@ -1,5 +1,9 @@
 # Sporet - Home Assistant Integration
 
+<div align="center">
+  <img src="assets/sporet.svg" alt="Sporet Logo" width="200"/>
+</div>
+
 A Home Assistant custom component for monitoring cross-country ski trail conditions from [Sporet.no](https://sporet.no/).
 
 ## Features
