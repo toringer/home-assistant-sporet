@@ -16,9 +16,9 @@ A Home Assistant custom component for monitoring cross-country ski trail conditi
 
 ## Features
 
-- Monitor ski trail segment status
+- Monitor ski trail slope status
 - Track trail preparation time
-- Get warning messages for trail conditions
+- View preparation quality across slope segments
 - Automatic updates every 15 minutes
 
 
@@ -49,11 +49,11 @@ A Home Assistant custom component for monitoring cross-country ski trail conditi
 
 Before setting up the integration, you need:
 
-1. **Ski Trail Segment ID**: Find this at [sporet.no](https://sporet.no/)
+1. **Ski Trail Slope ID**: Find this at [sporet.no](https://sporet.no/)
    - Navigate to your desired ski trail
-   - Select a segment in the map
+   - Select a slope in the map
    - Click the `Share` button
-   - Extract the segment id from the copied URL
+   - Extract the slope id from the copied URL
 
 
 2. **Bearer Token**:
@@ -69,51 +69,57 @@ Before setting up the integration, you need:
 2. Click **+ Add Integration**
 3. Search for "Sporet"
 4. Enter your configuration:
-   - **Ski Trail Segment ID**: The specific segment you want to monitor
+   - **Ski Trail Slope ID**: The specific slope you want to monitor
    - **Bearer Token**: Your API authentication token
 5. Click **Submit**
 
-The integration will validate your credentials and create sensors for the specified trail segment.
+The integration will validate your credentials and create sensors for the specified slope.
 
 ## Sensors
 
-The integration creates three sensors for each configured trail segment:
+The integration creates three sensors for each configured slope:
 
 ### 1. Prepped Time
-- **Entity ID**: `sensor.<destination_name>_<slope_name>_prepped_time`
+- **Entity ID**: `sensor.<slope_name>_prepped_time`
 - **Description**: Timestamp of when the trail was last prepared
 - **Device Class**: Timestamp
 - **Example**: `2025-12-01T09:06:12Z`
 
 ### 2. Prep Symbol
-- **Entity ID**: `sensor.<destination_name>_<slope_name>_prep_symbol`
-- **Description**: Numeric code indicating trail condition
+- **Entity ID**: `sensor.<slope_name>_prep_symbol`
+- **Description**: Numeric code indicating overall trail condition
 - **Values**:
-  - `40`: Good condition
+  - `30`: Good condition
+  - `50`: Fair condition
   - `70`: Poor condition or not groomed
   - Other values as defined by Sporet
-- **Example**: `40`
+- **Example**: `30`
 
-### 3. Warning Text
-- **Entity ID**: `sensor.<destination_name>_<slope_name>_warning_text`
-- **Description**: Warning message about trail conditions
-- **Example**: `null` (no warnings) or text describing issues
+### 3. Prep Symbol Parts
+- **Entity ID**: `sensor.<slope_name>_prep_symbol_parts`
+- **Description**: Shows the lowest prep symbol value across all route segments
+- **Attributes**: Contains `parts` array with detailed breakdown by segment
+- **Example**: `30` (lowest value from all segments)
 
 ### Additional Attributes
 
-Each sensor includes additional attributes with detailed segment information:
+Each sensor includes additional attributes with detailed route information:
 
-- `slope_id`: The slope identifier
-- `segment_id`: The trail segment identifier
-- `slope_name`: Name of the ski trail
+- `slope_id`: The route identifier
+- `slope_name`: Name of the ski trail route
+- `destination_name`: Name of the destination area
+- `county`: County name
+- `municipal`: Municipality name
+- `country`: Country
+- `prepped_by`: Organization responsible for grooming
 - `hasClassic`: Boolean - Classic skiing available
 - `hasSkating`: Boolean - Skating skiing available
 - `hasFloodlight`: Boolean - Floodlight available
-- `statusId`: Current status (e.g., "active")
-- `segmentLength`: Length of the segment in meters
-- `destinationId`: Associated destination ID
 - `isScooterTrail`: Boolean - Scooter trail
-- `trailTypeSymbol`: Trail type numeric code
+- `routelength`: Total length of the route in meters
+- `totalElevationGain`: Total elevation gain in meters
+- `totalElevationLoss`: Total elevation loss in meters
+- `parts`: (prep_symbol_parts sensor only) Array of segment-level prep symbols with percentages
 
 ## Updating Bearer Token
 
@@ -154,12 +160,12 @@ automation:
 type: entities
 title: Ski Trail Status
 entities:
-  - entity: sensor.sjusjoen_ljosheim_kort_prepped_time
+  - entity: sensor.heistadmoen_10_km_prepped_time
     name: Last Groomed
-  - entity: sensor.sjusjoen_ljosheim_kort_prep_symbol
-    name: Condition
-  - entity: sensor.sjusjoen_ljosheim_kort_warning_text
-    name: Warnings
+  - entity: sensor.heistadmoen_10_km_prep_symbol
+    name: Overall Condition
+  - entity: sensor.heistadmoen_10_km_prep_symbol_parts
+    name: Worst Segment Condition
 ```
 
 ## API Details
@@ -170,6 +176,7 @@ The integration uses the Sporet public API:
 - **Authentication**: Bearer token in Authorization header
 - **Update Interval**: 900 seconds (15 minutes)
 - **Method**: GET
+
 
 ## Troubleshooting
 
@@ -185,11 +192,11 @@ The integration uses the Sporet public API:
 - Check if the token has expired
 - Regenerate a new token from sporet.no
 
-### Segment Not Found Error
+### Route Not Found Error
 
-- Verify the segment ID exists in the specified slope
+- Verify the slope ID exists on sporet.no
 - Check the slope ID is correct
-- Make a manual API call to verify the segment exists
+- Make a manual API call to verify the route exists
 
 ### Enable Debug Logging
 

@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_BEARER_TOKEN, CONF_SEGMENT_ID, DOMAIN
+from .const import CONF_BEARER_TOKEN, CONF_SLOPE_ID, DOMAIN
 from .coordinator import SporetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,11 +16,11 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sporet from a config entry."""
-    segment_id = entry.data.get(CONF_SEGMENT_ID)
+    slope_id = entry.data.get(CONF_SLOPE_ID)
     bearer_token = entry.data.get(CONF_BEARER_TOKEN)
 
-    if not segment_id:
-        _LOGGER.error("Segment ID not found in config entry")
+    if not slope_id:
+        _LOGGER.error("Slope ID not found in config entry")
         return False
 
     if not bearer_token:
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     coordinator = SporetDataUpdateCoordinator(
-        hass, bearer_token, segment_id
+        hass, bearer_token, slope_id
     )
 
     await coordinator.async_config_entry_first_refresh()

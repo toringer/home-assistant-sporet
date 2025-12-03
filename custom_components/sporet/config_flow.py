@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     API_BASE_URL,
     CONF_BEARER_TOKEN,
-    CONF_SEGMENT_ID,
+    CONF_SLOPE_ID,
     DOMAIN,
 )
 
@@ -25,10 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     bearer_token = data[CONF_BEARER_TOKEN]
-    segment_id = data[CONF_SEGMENT_ID]
+    slope_id = data[CONF_SLOPE_ID]
 
     session = async_get_clientsession(hass)
-    url = f"{API_BASE_URL}/{segment_id}/details"
+    url = f"{API_BASE_URL}/{slope_id}/details"
 
     headers = {
         "Authorization": f"Bearer {bearer_token}",
@@ -42,36 +42,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             response.raise_for_status()
             api_data = await response.json()
 
-            # Extract data from the new API structure
-            selected_segment = api_data.get("selectedSegment", {})
-            destination = api_data.get("destination", {})
-            routes = api_data.get("routes", [])
+            # Extract data from the new API structure (top-level fields)
+            slope_name = api_data.get("name")
+            route_api_id = api_data.get("id")
 
-            # Verify the segment exists
-            if not selected_segment or selected_segment.get("id") != int(segment_id):
+            # Verify the route exists and ID matches
+            if not slope_name or route_api_id != int(slope_id):
                 raise CannotConnect
 
-            # Try to find the route name that contains this segment
-            route_name = None
-            if routes:
-                for route in routes:
-                    if "skiTrailSegments" in route:
-                        for segment in route["skiTrailSegments"]:
-                            if str(segment.get("id")) == str(segment_id):
-                                route_name = route.get("name")
-                                break
-                    if route_name:
-                        break
-
-            # Build a descriptive name
-            segment_name = destination.get("name", f"Segment {segment_id}")
-            if route_name:
-                segment_name = f"{destination.get('name', 'Unknown')} - {route_name}"
-
-            # Return segment name for display
+            # Return route name for display
             return {
-                "title": segment_name,
-                "segment_name": segment_name,
+                "title": slope_name,
+                "slope_name": slope_name,
             }
 
     except aiohttp.ClientResponseError as err:
@@ -101,14 +83,12 @@ class SporetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except SegmentNotFound:
-                errors["base"] = "segment_not_found"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Set unique ID based on segment_id
-                await self.async_set_unique_id(user_input[CONF_SEGMENT_ID])
+                # Set unique ID based on slope_id
+                await self.async_set_unique_id(user_input[CONF_SLOPE_ID])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
@@ -118,7 +98,7 @@ class SporetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_SEGMENT_ID): str,
+                vol.Required(CONF_SLOPE_ID): str,
                 vol.Required(CONF_BEARER_TOKEN): str,
             }
         )
@@ -150,7 +130,7 @@ class SporetOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             # Validate the new bearer token
             test_data = {
-                CONF_SEGMENT_ID: self.config_entry.data[CONF_SEGMENT_ID],
+                CONF_SLOPE_ID: self.config_entry.data[CONF_SLOPE_ID],
                 CONF_BEARER_TOKEN: user_input[CONF_BEARER_TOKEN],
             }
 
@@ -196,5 +176,3 @@ class CannotConnect(Exception):
 
 class InvalidAuth(Exception):
     """Error to indicate there is invalid auth."""
-
-

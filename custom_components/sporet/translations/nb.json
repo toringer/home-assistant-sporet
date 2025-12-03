@@ -3,9 +3,9 @@
         "step": {
             "user": {
                 "title": "Sett opp Sporet",
-                "description": "Finn segment-ID på sporet.no, og hent bearer token fra nettleseren din.",
+                "description": "Finn løype-ID på sporet.no, og hent bearer token fra nettleseren din.",
                 "data": {
-                    "segment_id": "Skiløypesegment-ID",
+                    "slope_id": "Skiløype-ID",
                     "bearer_token": "Bearer Token"
                 }
             }
@@ -16,14 +16,14 @@
             "unknown": "Uventet feil oppstod. Vennligst sjekk loggene for mer informasjon."
         },
         "abort": {
-            "already_configured": "Dette segmentet er allerede konfigurert."
+            "already_configured": "Denne ruten er allerede konfigurert."
         }
     },
     "options": {
         "step": {
             "init": {
                 "title": "Oppdater Sporet Bearer Token",
-                "description": "Oppdater din bearer token for Sporet API. Segment-ID kan ikke endres.",
+                "description": "Oppdater din bearer token for Sporet API. Løype-ID kan ikke endres.",
                 "data": {
                     "bearer_token": "Bearer Token"
                 }
@@ -42,9 +42,6 @@
             },
             "prep_symbol": {
                 "name": "Prepareringssymbol"
-            },
-            "warning_text": {
-                "name": "Advarselstekst"
             }
         }
     }

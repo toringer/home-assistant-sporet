@@ -21,10 +21,10 @@ class SporetDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         bearer_token: str,
-        segment_id: str,
+        slope_id: str,
     ) -> None:
         """Initialize."""
-        self.segment_id = segment_id
+        self.slope_id = slope_id
         self._bearer_token = bearer_token
         super().__init__(
             hass,
@@ -39,38 +39,22 @@ class SporetDataUpdateCoordinator(DataUpdateCoordinator):
         api = SporetAPI(session, self._bearer_token)
 
         try:
-            data = await api.async_get_segment_details(self.segment_id)
-            _LOGGER.debug("Updated data for segment %s: %s", self.segment_id, data)
+            data = await api.async_get_route_details(self.slope_id)
+            _LOGGER.debug("Updated data for route %s: %s", self.slope_id, data)
 
-            # Extract the selected segment data from the new API structure
-            selected_segment = data.get("selectedSegment", {})
-            destination = data.get("destination", {})
-            routes = data.get("routes", [])
+            # Extract data from the new API structure (top-level fields)
+            slope_name = data.get("name", "Unknown")
 
-            # Try to find the route name that contains this segment
-            route_name = None
-            if routes:
-                for route in routes:
-                    if "skiTrailSegments" in route:
-                        for segment in route["skiTrailSegments"]:
-                            if str(segment.get("id")) == str(self.segment_id):
-                                route_name = route.get("name")
-                                break
-                    if route_name:
-                        break
+            # Get destination name from destinations array
+            destinations = data.get("destinations", [])
+            destination_name = destinations[0].get("name") if destinations else "Unknown"
 
-            # Build a descriptive name
-            segment_name = destination.get("name", "Unknown")
-            if route_name:
-                segment_name = f"{destination.get('name', 'Unknown')} - {route_name}"
-
-            # Return the segment data with the new structure
+            # Return the route data with the new structure
             return {
-                "segment_name": segment_name,
-                "segment_id": selected_segment.get("id"),
-                "segment": selected_segment,
-                "destination": destination,
-                "routes": routes,
+                "slope_name": slope_name,
+                "slope_id": data.get("id"),
+                "route_data": data,  # Store full route data for sensor access
+                "destinations": destinations,
                 "prepped_by": data.get("preppedBy", []),
             }
 

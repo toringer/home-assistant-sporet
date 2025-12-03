@@ -25,9 +25,9 @@ class SporetAPI:
         self._session = session
         self._bearer_token = bearer_token
 
-    async def async_get_segment_details(self, segment_id: str) -> dict[str, Any]:
-        """Get segment details from the API."""
-        url = f"{API_BASE_URL}/{segment_id}/details"
+    async def async_get_route_details(self, slope_id: str) -> dict[str, Any]:
+        """Get route details from the API."""
+        url = f"{API_BASE_URL}/{slope_id}/details"
 
         try:
             headers = {
@@ -38,13 +38,12 @@ class SporetAPI:
             async with self._session.get(url, headers=headers) as response:
                 response.raise_for_status()
                 data = await response.json()
-                _LOGGER.debug("API response for segment %s: %s", segment_id, data)
+                _LOGGER.debug("API response for route %s: %s", slope_id, data)
                 return data
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Error fetching segment details: %s", err)
-            raise SporetAPIError(f"Error fetching segment details: {err}") from err
+            _LOGGER.error("Error fetching route details: %s", err)
+            raise SporetAPIError(f"Error fetching route details: {err}") from err
         except Exception as err:
             _LOGGER.error("Unexpected error: %s", err)
             raise SporetAPIError(f"Unexpected error: {err}") from err
-

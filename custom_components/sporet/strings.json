@@ -3,9 +3,9 @@
     "step": {
       "user": {
         "title": "Set up Sporet",
-        "description": "Find the segment ID at sporet.no, and extract the bearer token from your browser.",
+        "description": "Find the slope ID at sporet.no, and extract the bearer token from your browser.",
         "data": {
-          "segment_id": "Ski Trail Segment ID",
+          "slope_id": "Ski Trail Slope ID",
           "bearer_token": "Bearer Token"
         }
       }
@@ -16,14 +16,14 @@
       "unknown": "Unexpected error occurred. Please check the logs for more details."
     },
     "abort": {
-      "already_configured": "This segment is already configured."
+      "already_configured": "This slope is already configured."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Update Sporet Bearer Token",
-        "description": "Update your bearer token for the Sporet API. The segment ID cannot be changed.",
+        "description": "Update your bearer token for the Sporet API. The slope ID cannot be changed.",
         "data": {
           "bearer_token": "Bearer Token"
         }
@@ -42,9 +42,6 @@
       },
       "prep_symbol": {
         "name": "Prep Symbol"
-      },
-      "warning_text": {
-        "name": "Warning Text"
       }
     }
   }
