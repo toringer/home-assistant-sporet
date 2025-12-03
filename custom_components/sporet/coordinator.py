@@ -44,10 +44,7 @@ class SporetDataUpdateCoordinator(DataUpdateCoordinator):
 
             # Extract data from the new API structure (top-level fields)
             slope_name = data.get("name", "Unknown")
-
-            # Get destination name from destinations array
             destinations = data.get("destinations", [])
-            destination_name = destinations[0].get("name") if destinations else "Unknown"
 
             # Return the route data with the new structure
             return {
@@ -60,4 +57,3 @@ class SporetDataUpdateCoordinator(DataUpdateCoordinator):
 
         except SporetAPIError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-
