@@ -9,7 +9,7 @@
 # Sporet.no - Home Assistant Integration
 
 <div align="center">
-  <img src="assets/sporet.svg" alt="Sporet.no Logo" width="200"/>
+  <img src="https://raw.githubusercontent.com/toringer/home-assistant-heru/master/assets/sporet.svg" alt="Sporet.no Logo" width="200"/>
 </div>
 
 A Home Assistant custom component for monitoring cross-country ski trail conditions from [Sporet.no](https://sporet.no/).
