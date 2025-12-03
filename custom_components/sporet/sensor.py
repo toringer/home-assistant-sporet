@@ -156,17 +156,18 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
             attributes["prep_symbol_parts"] = prep_symbol_parts
 
         # Add additional route information
-        for key in [
-            "hasClassic",
-            "hasSkating",
-            "hasFloodlight",
-            "isScooterTrail",
-            "routelength",
-            "totalElevationGain",
-            "totalElevationLoss",
-        ]:
-            value = route_data.get(key)
+        route_info_mapping = {
+            "hasClassic": "has_classic",
+            "hasSkating": "has_skating",
+            "hasFloodlight": "has_floodlight",
+            "isScooterTrail": "is_scooter_trail",
+            "routelength": "route_length",
+            "totalElevationGain": "total_elevation_gain",
+            "totalElevationLoss": "total_elevation_loss",
+        }
+        for api_key, attr_key in route_info_mapping.items():
+            value = route_data.get(api_key)
             if value is not None:
-                attributes[key] = value
+                attributes[attr_key] = value
 
         return attributes
