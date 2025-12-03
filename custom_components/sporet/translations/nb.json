@@ -1,0 +1,51 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Sett opp Sporet",
+                "description": "Finn segment-ID på sporet.no, og hent bearer token fra nettleseren din.",
+                "data": {
+                    "segment_id": "Skiløypesegment-ID",
+                    "bearer_token": "Bearer Token"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke koble til Sporet API. Vennligst sjekk internettforbindelsen din og prøv igjen.",
+            "invalid_auth": "Ugyldig bearer token. Vennligst sjekk token og prøv igjen.",
+            "unknown": "Uventet feil oppstod. Vennligst sjekk loggene for mer informasjon."
+        },
+        "abort": {
+            "already_configured": "Dette segmentet er allerede konfigurert."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Oppdater Sporet Bearer Token",
+                "description": "Oppdater din bearer token for Sporet API. Segment-ID kan ikke endres.",
+                "data": {
+                    "bearer_token": "Bearer Token"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke koble til Sporet API. Vennligst sjekk internettforbindelsen din og prøv igjen.",
+            "invalid_auth": "Ugyldig bearer token. Vennligst sjekk token og prøv igjen.",
+            "unknown": "Uventet feil oppstod. Vennligst sjekk loggene for mer informasjon."
+        }
+    },
+    "entity": {
+        "sensor": {
+            "prepped_time": {
+                "name": "Prepareringstidspunkt"
+            },
+            "prep_symbol": {
+                "name": "Prepareringssymbol"
+            },
+            "warning_text": {
+                "name": "Advarselstekst"
+            }
+        }
+    }
+}

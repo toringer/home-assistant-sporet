@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up Sporet",
-        "description": "Enter your Sporet API credentials to monitor a ski trail segment. Find the segment ID at sporet.no, and obtain the bearer token from your Sporet account.",
+        "description": "Find the segment ID at sporet.no, and extract the bearer token from your browser.",
         "data": {
           "segment_id": "Ski Trail Segment ID",
           "bearer_token": "Bearer Token"
