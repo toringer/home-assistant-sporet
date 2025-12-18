@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, CONF_SLOPE_ID, DOMAIN
+from .const import ATTRIBUTION, CONF_IS_SEGMENT, CONF_SLOPE_ID, DOMAIN
 from .coordinator import SporetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            SporetSensor(coordinator, description, entry.data[CONF_SLOPE_ID])
+            SporetSensor(coordinator, description, entry.data[CONF_SLOPE_ID], entry.data.get(CONF_IS_SEGMENT))
             for description in SENSOR_DESCRIPTIONS
         ]
     )
@@ -59,6 +59,7 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
         coordinator: SporetDataUpdateCoordinator,
         description: SensorEntityDescription,
         slope_id: str,
+        is_segment: bool = False,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -66,6 +67,7 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
         self._slope_id = slope_id
         self._attr_unique_id = f"{DOMAIN}_{slope_id}_{description.key}"
         self._attr_attribution = ATTRIBUTION
+        self._is_segment = is_segment
 
     @property
     def name(self) -> str:
@@ -104,7 +106,10 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
         key = self.entity_description.key
 
         if key == "prepped_time":
-            prepped_time = route_data.get("preppedTime")
+            if self._is_segment:
+                prepped_time = route_data.get("selectedSegment", {}).get("preppedTime")
+            else:
+                prepped_time = route_data.get("preppedTime")
             if prepped_time:
                 try:
                     # Parse ISO 8601 datetime string
@@ -115,7 +120,10 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
             return None
 
         if key == "prep_symbol":
-            return route_data.get("prepSymbol")
+            if self._is_segment:
+                return route_data.get("selectedSegment", {}).get("prepSymbol")
+            else:
+                return route_data.get("prepSymbol")
 
         return None
 
@@ -151,7 +159,10 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
             )
 
         # Add prepSymbolParts array to all sensors
-        prep_symbol_parts = route_data.get("prepSymbolParts", [])
+        if self._is_segment:
+            prep_symbol_parts = route_data.get("selectedSegment", {}).get("prepSymbolParts", [])
+        else:
+            prep_symbol_parts = route_data.get("prepSymbolParts", [])
         if prep_symbol_parts:
             attributes["prep_symbol_parts"] = prep_symbol_parts
 
@@ -166,7 +177,10 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
             "totalElevationLoss": "total_elevation_loss",
         }
         for api_key, attr_key in route_info_mapping.items():
-            value = route_data.get(api_key)
+            if self._is_segment:
+                value = route_data.get("selectedSegment", {}).get(api_key)
+            else:
+                value = route_data.get(api_key)
             if value is not None:
                 attributes[attr_key] = value
 

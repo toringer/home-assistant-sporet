@@ -13,7 +13,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     API_BASE_URL,
+    API_SEGMENT_URL,
     CONF_BEARER_TOKEN,
+    CONF_IS_SEGMENT,
     CONF_SLOPE_ID,
     DOMAIN,
 )
@@ -33,6 +35,8 @@ def sanitize_bearer_token(bearer_token: str) -> str:
 
 def sanitize_slope_id(slope_id: str) -> str:
     """Allow user to paste the full URL to the slope."""
+    # Slope  : https://sporet.no/share/Slope/10490?name=Bergsj%C3%B8-Randan-Nysetlia
+    # Segment: https://sporet.no/share/SlopeSegment/131219?name=Segment
     if slope_id.lower().startswith("https:"):
         slope_id = slope_id.split("/")[5].split("?")[0].strip()
     return slope_id
@@ -44,32 +48,54 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     slope_id = data[CONF_SLOPE_ID]
 
     session = async_get_clientsession(hass)
-    url = f"{API_BASE_URL}/{slope_id}/details"
+    slope_url = f"{API_BASE_URL}/{slope_id}/details"
+    segment_url = f"{API_SEGMENT_URL}/{slope_id}/details"
 
     headers = {
         "Authorization": f"Bearer {bearer_token}",
         "Content-Type": "application/json",
     }
 
+    is_segment = False
     try:
-        async with session.get(url, headers=headers) as response:
+        async with session.get(slope_url, headers=headers) as response:
+            _LOGGER.debug(f"Trying to get {slope_url}")
             if response.status == 401:
+                _LOGGER.error(f"Error 401 for {slope_url}")
                 raise InvalidAuth
-            response.raise_for_status()
-            api_data = await response.json()
+            elif response.status == 404:
+                _LOGGER.info(f"Error 404 for {slope_url} - trying again with {segment_url}")
+                # Try again with segment URL
+                async with session.get(segment_url, headers=headers) as response:
+                    if response.status == 401:
+                        _LOGGER.error(f"Error 401 for {segment_url}")
+                        raise InvalidAuth
+                    _LOGGER.debug(f"Response {response.status} from {segment_url}")
+                    response.raise_for_status()
+                    api_data = await response.json()
+                    is_segment = True
+            else:
+                _LOGGER.debug(f"Response {response.status} from {slope_url}")
+                response.raise_for_status()
+                api_data = await response.json()
 
+            _LOGGER.debug(api_data)
             # Extract data from the new API structure (top-level fields)
-            slope_name = api_data.get("name")
-            route_api_id = api_data.get("id")
+            slope_name = api_data.get("name", f"Segment {api_data.get('selectedSegment', {}).get('id')}")
+            if is_segment:
+                route_api_id = api_data.get("selectedSegment", {}).get("id")
+            else:
+                route_api_id = api_data.get("id")
 
             # Verify the route exists and ID matches
-            if not slope_name or route_api_id != int(slope_id):
+            if route_api_id != int(slope_id):
                 raise CannotConnect
 
             # Return route name for display
             return {
                 "title": slope_name,
                 "slope_name": slope_name,
+                CONF_IS_SEGMENT: is_segment,
             }
 
     except aiohttp.ClientResponseError as err:
@@ -109,7 +135,7 @@ class SporetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Set unique ID based on slope_id
                 await self.async_set_unique_id(user_input[CONF_SLOPE_ID])
                 self._abort_if_unique_id_configured()
-
+                user_input[CONF_IS_SEGMENT] = info[CONF_IS_SEGMENT]
                 return self.async_create_entry(
                     title=info["title"],
                     data=user_input,

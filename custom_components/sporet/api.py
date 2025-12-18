@@ -4,7 +4,7 @@ import logging
 from typing import Any
 import aiohttp
 
-from .const import API_BASE_URL
+from .const import API_BASE_URL, API_SEGMENT_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,30 @@ class SporetAPI:
                 response.raise_for_status()
                 data = await response.json()
                 _LOGGER.debug("API response for route %s: %s", slope_id, data)
+                return data
+
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error fetching route details: %s", err)
+            raise SporetAPIError(f"Error fetching route details: {err}") from err
+        except Exception as err:
+            _LOGGER.error("Unexpected error: %s", err)
+            raise SporetAPIError(f"Unexpected error: {err}") from err
+
+
+    async def async_get_segment_details(self, segment_id: str) -> dict[str, Any]:
+        """Get route details from the API."""
+        url = f"{API_SEGMENT_URL}/{segment_id}/details"
+
+        try:
+            headers = {
+                "Authorization": f"Bearer {self._bearer_token}",
+                "Content-Type": "application/json",
+            }
+
+            async with self._session.get(url, headers=headers) as response:
+                response.raise_for_status()
+                data = await response.json()
+                _LOGGER.debug("API response for route %s: %s", segment_id, data)
                 return data
 
         except aiohttp.ClientError as err:
