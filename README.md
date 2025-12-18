@@ -60,7 +60,18 @@ Before setting up the integration, you need:
    - Log in to sporet.no
    - Open the network anaylser in the developer tools of the browser
    - Find the `details` traffic, find the `authorization` attribute in the header section
-   - Copy the token (remove the `Bearer` text)
+   - Copy the token
+
+> [!IMPORTANT]
+> Make sure you copy the entire token!
+>
+> Some browsers might truncate the Bearer Token when you copy it. Look for a switch to
+> "display raw headers" or similar which will ensure the entire string is available.
+
+Another option is to right click on one of the requests to `https://api.sporet.no` and look for
+**Copy Request Headers**, or **Copy as Curl** or something similar.  Paste the result into
+a plain text file and find the line starting with `Authorization:`.  Copy the entire line and 
+paste it into the Bearer Token field below.
 
 
 ### Setup Steps
