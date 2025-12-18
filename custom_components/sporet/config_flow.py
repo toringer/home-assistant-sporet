@@ -21,6 +21,23 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def sanitize_bearer_token(bearer_token: str) -> str:
+    """Handle various permutations of the bearer token."""
+    bearer_token = " ".join(bearer_token.strip().split())
+    if bearer_token.lower().startswith("authorization"):
+        bearer_token = bearer_token.split(" ")[2].strip()
+    if bearer_token.lower().startswith("bearer"):
+        bearer_token = bearer_token.split(" ")[1].strip()
+    return bearer_token
+
+
+def sanitize_slope_id(slope_id: str) -> str:
+    """Allow user to paste the full URL to the slope."""
+    if slope_id.lower().startswith("https:"):
+        slope_id = slope_id.split("/")[5].split("?")[0].strip()
+    return slope_id
+
+
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     bearer_token = data[CONF_BEARER_TOKEN]
@@ -76,6 +93,9 @@ class SporetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_BEARER_TOKEN] = sanitize_bearer_token(user_input[CONF_BEARER_TOKEN])
+            user_input[CONF_SLOPE_ID] = sanitize_slope_id(user_input[CONF_SLOPE_ID])
+
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
