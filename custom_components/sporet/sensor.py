@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback, AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, CONF_IS_SEGMENT, CONF_SLOPE_ID, DOMAIN
@@ -38,17 +38,18 @@ SENSOR_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sporet sensor from a config entry."""
-    coordinator: SporetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinators = entry.runtime_data
 
-    async_add_entities(
-        [
-            SporetSensor(coordinator, description, entry.data[CONF_SLOPE_ID], entry.data.get(CONF_IS_SEGMENT))
-            for description in SENSOR_DESCRIPTIONS
-        ]
-    )
+    for subentry_id, coordinator in coordinators.items():
+        async_add_entities(
+            [
+                SporetSensor(coordinator, description, subentry_id)
+                for description in SENSOR_DESCRIPTIONS
+            ]
+        )
 
 
 class SporetSensor(CoordinatorEntity, SensorEntity):
@@ -58,16 +59,18 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: SporetDataUpdateCoordinator,
         description: SensorEntityDescription,
-        slope_id: str,
-        is_segment: bool = False,
+        subentry_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._slope_id = coordinator.slope_id
+        self._is_segment = coordinator.is_segment
         self.entity_description = description
-        self._slope_id = slope_id
-        self._attr_unique_id = f"{DOMAIN}_{slope_id}_{description.key}"
+        self._attr_unique_id = f"{subentry_id}-{description.key}"
         self._attr_attribution = ATTRIBUTION
-        self._is_segment = is_segment
+        self._subentry_id = subentry_id
+        _LOGGER.debug(f"Setting up Sporet-sensor uid {self._attr_unique_id}")
+
 
     @property
     def name(self) -> str:
@@ -86,7 +89,7 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
             slope_name = self.coordinator.data.get("slope_name", "Unknown")
 
         return DeviceInfo(
-            identifiers={(DOMAIN, self._slope_id)},
+            identifiers={(DOMAIN, self._subentry_id)},
             name=slope_name,
             manufacturer="Sporet",
             model="Ski Trail Route",

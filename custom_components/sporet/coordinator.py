@@ -4,12 +4,14 @@ import logging
 from datetime import timedelta
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import SporetAPI, SporetAPIError
-from .const import DOMAIN, UPDATE_INTERVAL_SECONDS
+from .const import CONF_BEARER_TOKEN, CONF_IS_SEGMENT, CONF_SLOPE_ID, DOMAIN, UPDATE_INTERVAL_SECONDS
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,20 +22,22 @@ class SporetDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        bearer_token: str,
-        slope_id: str,
-        is_segment: bool = False,
+        config_entry: ConfigEntry,
+        subentry_id: str,
+        subentry: ConfigSubentry,
     ) -> None:
         """Initialize."""
-        self.slope_id = slope_id
-        self._bearer_token = bearer_token
-        self.is_segment = is_segment
+        self._bearer_token = config_entry.data[CONF_BEARER_TOKEN]
+        self.slope_id = subentry.data[CONF_SLOPE_ID]
+        self.is_segment = subentry.data[CONF_IS_SEGMENT]
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{subentry_id}",
             update_interval=timedelta(seconds=UPDATE_INTERVAL_SECONDS),
+            config_entry=config_entry,
         )
+        self.id = subentry_id
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Sporet."""
