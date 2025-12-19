@@ -80,11 +80,19 @@ paste it into the Bearer Token field below.
 2. Click **+ Add Integration**
 3. Search for "Sporet"
 4. Enter your configuration:
-   - **Ski Trail Slope ID**: The specific slope you want to monitor
    - **Bearer Token**: Your API authentication token
 5. Click **Submit**
 
-The integration will validate your credentials and create sensors for the specified slope.
+The integration will validate your credentials.
+
+After the main entry is created, you can add slopes and segments.
+
+1. Go to **Settings** → **Devices & Services**
+2. Find the "Sporet" integration
+3. Click the "+" sign next to "Add entry" in the Sporet Integration
+4. Add a Slope - either a "Share" link from the Slope or Segment or just the ID number
+
+The integration will create sensors for the specified slope.
 
 ## Sensors
 
