@@ -121,6 +121,27 @@ Each sensor includes additional attributes with detailed route information:
 - `totalElevationLoss`: Total elevation loss in meters
 - `parts`: (prep_symbol_parts sensor only) Array of segment-level prep symbols with percentages
 
+## Sporet Card
+
+A spimple card for Lovelace is included in sporet-card.js
+
+![newly prepped](assets/sporet-card-1.png)
+![not prepped - has floodlight](assets/sporet-card-2.png)
+
+The card is configured by adding the Device ID of a Slope.  The device ID can be found in the URL
+when you go into configuration of the Device:
+
+`https://your.ha.url/config/devices/device/0db129eb80c612a5bff671925fad7735` - 
+here `0db129eb80c612a5bff671925fad7735` is the device id.
+
+Add the card:
+```yaml
+type: custom:sporet.no-card
+device_id: 0db129eb80c612a5bff671925fad7735
+
+```
+
+
 ## Updating Bearer Token
 
 If your bearer token expires or needs to be updated:
