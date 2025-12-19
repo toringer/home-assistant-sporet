@@ -48,7 +48,8 @@ async def async_setup_entry(
             [
                 SporetSensor(coordinator, description, subentry_id)
                 for description in SENSOR_DESCRIPTIONS
-            ]
+            ],
+            config_subentry_id=subentry_id
         )
 
 
