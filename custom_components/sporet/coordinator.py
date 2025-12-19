@@ -4,12 +4,14 @@ import logging
 from datetime import timedelta
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import SporetAPI, SporetAPIError
-from .const import DOMAIN, UPDATE_INTERVAL_SECONDS
+from .const import CONF_BEARER_TOKEN, CONF_IS_SEGMENT, CONF_SLOPE_ID, DOMAIN, UPDATE_INTERVAL_SECONDS
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,18 +22,22 @@ class SporetDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        bearer_token: str,
-        slope_id: str,
+        config_entry: ConfigEntry,
+        subentry_id: str,
+        subentry: ConfigSubentry,
     ) -> None:
         """Initialize."""
-        self.slope_id = slope_id
-        self._bearer_token = bearer_token
+        self._bearer_token = config_entry.data[CONF_BEARER_TOKEN]
+        self.slope_id = subentry.data[CONF_SLOPE_ID]
+        self.is_segment = subentry.data[CONF_IS_SEGMENT]
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{subentry_id}",
             update_interval=timedelta(seconds=UPDATE_INTERVAL_SECONDS),
+            config_entry=config_entry,
         )
+        self.id = subentry_id
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Sporet."""
@@ -39,17 +45,32 @@ class SporetDataUpdateCoordinator(DataUpdateCoordinator):
         api = SporetAPI(session, self._bearer_token)
 
         try:
-            data = await api.async_get_route_details(self.slope_id)
-            _LOGGER.debug("Updated data for route %s: %s", self.slope_id, data)
+            if self.is_segment:
+                data = await api.async_get_segment_details(self.slope_id)
+                _LOGGER.debug("Updated data for segment %s: %s", self.slope_id, data)
 
-            # Extract data from the new API structure (top-level fields)
-            slope_name = data.get("name", "Unknown")
-            destinations = data.get("destinations", [])
+                # Extract data from the new API structure (top-level fields)
+                slope_id = data.get('selectedSegment', {}).get('id')
+                slope_name = f"Segment {slope_id}"
+
+                destinations = [data.get('destination', {})]
+                destination_name = destinations[0].get("name") if destinations else "Unknown"
+            else:
+                data = await api.async_get_route_details(self.slope_id)
+                _LOGGER.debug("Updated data for route %s: %s", self.slope_id, data)
+
+                # Extract data from the new API structure (top-level fields)
+                slope_id = data.get("id")
+                slope_name = data.get("name", "Unknown")
+
+                # Get destination name from destinations array
+                destinations = data.get("destinations", [])
+                destination_name = destinations[0].get("name") if destinations else "Unknown"
 
             # Return the route data with the new structure
             return {
                 "slope_name": slope_name,
-                "slope_id": data.get("id"),
+                "slope_id": slope_id,
                 "route_data": data,  # Store full route data for sensor access
                 "destinations": destinations,
                 "prepped_by": data.get("preppedBy", []),
@@ -57,3 +78,4 @@ class SporetDataUpdateCoordinator(DataUpdateCoordinator):
 
         except SporetAPIError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+

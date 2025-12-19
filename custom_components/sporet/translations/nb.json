@@ -3,10 +3,28 @@
         "step": {
             "user": {
                 "title": "Sett opp Sporet",
-                "description": "Finn løype-ID på sporet.no, og hent bearer token fra nettleseren din.",
+                "description": "Hent bearer token fra nettleseren din.",
                 "data": {
-                    "slope_id": "Skiløype-ID",
                     "bearer_token": "Bearer Token"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke koble til Sporet API. Vennligst sjekk internettforbindelsen din og prøv igjen.",
+            "invalid_auth": "Ugyldig bearer token. Vennligst sjekk token og prøv igjen.",
+            "unknown": "Uventet feil oppstod. Vennligst sjekk loggene for mer informasjon."
+        },
+        "abort": {
+            "already_configured": "Sporet.no er allerede konfigurert."
+        }
+    },
+    "config_subentries": {
+        "step": {
+            "user": {
+                "title": "Legg til løype",
+                "description": "Lim inn 'Del' lenken fra en Løype eller Løypestrekning fra Sporet.no.",
+                "data": {
+                    "slope_id": "Skiløype-ID"
                 }
             }
         },

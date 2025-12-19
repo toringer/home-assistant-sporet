@@ -3,10 +3,28 @@
     "step": {
       "user": {
         "title": "Set up Sporet",
-        "description": "Find the slope ID at sporet.no, and extract the bearer token from your browser.",
+        "description": "Extract the bearer token from your browser.",
         "data": {
-          "slope_id": "Ski Trail Slope ID",
           "bearer_token": "Bearer Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Sporet API. Please check your internet connection and try again.",
+      "invalid_auth": "Invalid bearer token. Please check your token and try again.",
+      "unknown": "Unexpected error occurred. Please check the logs for more details."
+    },
+    "abort": {
+      "already_configured": "Sporet.no is already configured."
+    }
+  },
+  "config_subentries": {
+    "step": {
+      "user": {
+        "title": "Add slope",
+        "description": "Get the 'Share' link from a Slope or Segment at Sporet.no.",
+        "data": {
+          "slope_id": "Slope ID or Share Link"
         }
       }
     },
