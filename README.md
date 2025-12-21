@@ -131,7 +131,7 @@ A spimple card for Lovelace is included in sporet-card.js
 The card is configured by adding the Device ID of a Slope.  The device ID can be found in the URL
 when you go into configuration of the Device:
 
-`https://your.ha.url/config/devices/device/0db129eb80c612a5bff671925fad7735` - 
+`https://your.ha.url/config/devices/device/0db129eb80c612a5bff671925fad7735` -
 here `0db129eb80c612a5bff671925fad7735` is the device id.
 
 Add the card:

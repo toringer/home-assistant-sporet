@@ -171,6 +171,10 @@ class DeviceSensorsBadgesCard extends LitElement {
         fill: currentColor;
       }
 
+      .clickable {
+        cursor: pointer;
+      }
+
       ha-icon {
         --mdc-icon-size: 22px;
       }
@@ -368,19 +372,79 @@ class DeviceSensorsBadgesCard extends LitElement {
     `;
   }
 
+  _formatRouteLength(entityId) {
+    const meters = this.hass?.states?.[entityId]?.attributes?.route_length;
+  
+    if (meters == null) return null; // not present
+    const m = Number(meters);
+    if (!Number.isFinite(m) || m <= 0) return null;
+  
+    // If >= 1000 m, show km rounded sensibly; otherwise show meters.
+    if (m >= 1000) {
+      const km = m / 1000;
+  
+      // Rounding policy:
+      // - < 10 km: 1 decimal (e.g., 3.4 km)
+      // - >= 10 km: nearest whole km (e.g., 12 km)
+      const rounded =
+        km < 10 ? Math.round(km * 10) / 10 : Math.round(km);
+  
+      // Use Norwegian decimal comma if HA locale is nb-NO/nn-NO etc.
+      const locale =
+        this.hass?.locale?.language
+          ? `${this.hass.locale.language}${this.hass.locale.country ? "-" + this.hass.locale.country : ""}`
+          : undefined;
+  
+      const formatted = new Intl.NumberFormat(locale, {
+        maximumFractionDigits: km < 10 ? 1 : 0,
+        minimumFractionDigits: km < 10 && rounded % 1 !== 0 ? 1 : 0,
+      }).format(rounded);
+  
+      return `${formatted} km`;
+    }
+  
+    // < 1000 m: show meters rounded to nearest 10 m
+    const roundedM = Math.round(m / 10) * 10;
+    return `${roundedM} m`;
+  }
+
+  _entityIcon(entityId) {
+    const s = this.hass?.states?.[entityId];
+    // If the user set a custom icon, it will typically be in state attributes as "icon"
+    return s?.attributes?.icon || "mdi:help-circle-outline";
+  }
+
+  _openMoreInfo(entityId) {
+    if (!entityId) return;
+    this.dispatchEvent(
+      new CustomEvent("hass-more-info", {
+        detail: { entityId },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   render() {
     if (!this.hass || !this._config) return html``;
-
-    if (this._error) return html`<ha-card><div class="error">${this._error}</div></ha-card>`;
-
+  
+    if (this._error) {
+      return html`<ha-card><div class="error">${this._error}</div></ha-card>`;
+    }
+  
     const entities = this._entityIds ?? [];
+    if (!entities.length) {
+      return html`<ha-card><div class="card muted">Resolving device sensors…</div></ha-card>`;
+    }
+  
+    // Identify numeric vs datetime sensor by state parsability
     let numericEntity = null;
     let datetimeEntity = null;
-    
+  
     for (const eid of entities) {
       const state = this.hass?.states?.[eid]?.state;
       if (state == null) continue;
-    
+  
       const n = Number(state);
       if (Number.isFinite(n) && numericEntity === null) {
         numericEntity = eid;
@@ -388,53 +452,99 @@ class DeviceSensorsBadgesCard extends LitElement {
         datetimeEntity = eid;
       }
     }
-
+  
     // Fallbacks if detection fails
     numericEntity ??= entities[0] ?? null;
-    datetimeEntity ??= entities.find(e => e !== numericEntity) ?? null;
-    if (!numericEntity) return html`<ha-card><div class="card muted">Resolving device sensors…</div></ha-card>`;
-
+    datetimeEntity ??= entities.find((e) => e !== numericEntity) ?? null;
+  
+    if (!numericEntity) {
+      return html`<ha-card><div class="card muted">Resolving device sensors…</div></ha-card>`;
+    }
+  
     const numericValue = this._numericState(numericEntity);
     const primaryColor = this._colorForStatusValue(numericValue);
-
-    const attrEntity = (this._config.attributes_from === "datetimeEntity" && datetimeEntity) ? datetimeEntity : numericEntity;
-
+  
+    // Attributes: from numeric sensor (recommended) unless configured to use datetime sensor
+    const attrEntity =
+      (this._config.attributes_from === "secondary" && datetimeEntity)
+        ? datetimeEntity
+        : numericEntity;
+  
     const has_skating = this._attrBool(attrEntity, "has_skating");
     const has_classic = this._attrBool(attrEntity, "has_classic");
     const has_floodlight = this._attrBool(attrEntity, "has_floodlight");
     const is_scooter_trail = this._attrBool(attrEntity, "is_scooter_trail");
-
+  
     const anyBadges = has_skating || has_classic || has_floodlight || is_scooter_trail;
     const tint = this._config.tint_badges_with_primary_color ? primaryColor : null;
-
+  
+    const icon = this._entityIcon(numericEntity);
+  
+    const timestampText = datetimeEntity ? this._formatTimestamp(datetimeEntity) : "—";
+    const routeLenText = this._formatRouteLength(numericEntity) ?? "-";
+  
     return html`
       <ha-card>
         <div class="card">
           <div class="row">
             <div class="left">
-              <ha-icon icon="mdi:map-marker" style="color:${primaryColor}"></ha-icon>
+              <ha-icon
+                icon=${icon}
+                style="color:${primaryColor}"
+                class="clickable"
+                @click=${() => this._openMoreInfo(numericEntity)}
+                title="More info"
+              ></ha-icon>
+  
               <div style="min-width:0">
-                <div class="title">${this._deviceName ?? "Løype"}</div>
+                <div
+                  class="title clickable"
+                  role="button"
+                  tabindex="0"
+                  @click=${() => this._openMoreInfo(numericEntity)}
+                  @keydown=${(e) => {
+                    if (e.key === "Enter" || e.key === " ") this._openMoreInfo(numericEntity);
+                  }}
+                  title="More info"
+                >
+                  ${this._deviceName ?? "…"}
+                </div>
+  
                 <div class="sub">
-                  ${datetimeEntity ? this._formatTimestamp(datetimeEntity) : "—"}
+                  ${timestampText}
                 </div>
               </div>
             </div>
-
+  
             <div style="text-align:right">
               <div class="value">
-                <span style="color:${primaryColor}">${this._labelForStatusValue(numericValue)}</span>
+                <span
+                  class="clickable"
+                  role="button"
+                  tabindex="0"
+                  style="color:${primaryColor}"
+                  @click=${() => this._openMoreInfo(datetimeEntity || numericEntity)}
+                  @keydown=${(e) => {
+                    if (e.key === "Enter" || e.key === " ")
+                      this._openMoreInfo(datetimeEntity || numericEntity);
+                  }}
+                  title="More info"
+                >
+                  ${this._labelForStatusValue(numericValue)}
+                </span>
               </div>
-              ${numericValue ? html`<div class="sub muted">${this._formatState(numericValue)}</div>` : html``}
+  
+              <div class="sub muted">${routeLenText}</div>
             </div>
           </div>
-
+  
           ${anyBadges
             ? html`
                 <div class="badges">
                   ${has_skating ? this._renderInlineSvgBadge("Skating", "has_skating", tint) : html``}
                   ${has_classic ? this._renderInlineSvgBadge("Classic", "has_classic", tint) : html``}
                   ${is_scooter_trail ? this._renderInlineSvgBadge("Scooter", "is_scooter_trail", tint) : html``}
+  
                   ${has_floodlight
                     ? html`
                         <span class="badge" title="Floodlight">
