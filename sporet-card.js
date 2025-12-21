@@ -6,6 +6,25 @@
  */
 
 const CARD_TAG = "sporet.no-card";
+const EDITOR_TAG = `${CARD_TAG}-editor`;
+const CARD_TYPE = `custom:${CARD_TAG}`;
+
+// ---- User-visible strings (easy to customize without full localization) ----
+const UI_STRINGS = {
+  editor: {
+    device_id: "Løype",
+    tint_badges_with_primary_color: "Statusfarge på badges",
+    show_badge_text: "Tekst på badges",
+    floodlight_icon: "Ikon for lysløype",
+  },
+
+  // Option labels / defaults (keep here if you re-enable selects later)
+  options: {
+    // attributes_from_primary: "Numeric sensor",
+    // attributes_from_secondary: "Datetime sensor",
+  },
+};
+
 
 
 // Discrete status value → color mapping
@@ -51,6 +70,13 @@ const STATUS_LABELS = {
   71: "Ingen",
 };
 
+const BADGES = {
+  has_classic: "Klassisk",
+  has_skating: "Skøyting",
+  has_floodlight: "Lysløype",
+  is_scooter_trail: "Scooterspor"
+}
+
 const DEFAULT_STATUS_LABEL = "Ukjent";
 
 
@@ -85,7 +111,7 @@ const getHaLit = () => {
 
 const { LitElement, html, css } = getHaLit();
 
-class DeviceSensorsBadgesCard extends LitElement {
+class SporetCard extends LitElement {
   static get properties() {
     return {
       hass: {},
@@ -188,6 +214,19 @@ class DeviceSensorsBadgesCard extends LitElement {
     `;
   }
 
+  static getConfigElement() {
+    return document.createElement(EDITOR_TAG);
+  }
+
+  static getStubConfig() {
+    return {
+      device_id: "",
+      attributes_from: "primary",
+      tint_badges_with_primary_color: false,
+      floodlight_icon: "mdi:light-flood-down",
+    };
+  }
+
   setConfig(config) {
     if (!config || !config.device_id) throw new Error("device_id is required");
 
@@ -212,6 +251,9 @@ class DeviceSensorsBadgesCard extends LitElement {
 
       // Optional: control whether SVG badges are tinted using the primary color
       tint_badges_with_primary_color: config.tint_badges_with_primary_color ?? false,
+
+      // Optional: show badge decsriptive label
+      show_badge_text: config.show_badge_text ?? true,
     };
 
     this._entityIds = null;
@@ -367,7 +409,7 @@ class DeviceSensorsBadgesCard extends LitElement {
     return html`
       <span class="badge" title=${label} style=${tintColor ? `color:${tintColor}` : ""}>
         <span class="svg-wrap" .innerHTML=${svg}></span>
-        <span>${label}</span>
+        ${this._config.show_badge_text ? html`<span>${label}</span>` : html``}
       </span>
     `;
   }
@@ -541,15 +583,15 @@ class DeviceSensorsBadgesCard extends LitElement {
           ${anyBadges
             ? html`
                 <div class="badges">
-                  ${has_skating ? this._renderInlineSvgBadge("Skating", "has_skating", tint) : html``}
-                  ${has_classic ? this._renderInlineSvgBadge("Classic", "has_classic", tint) : html``}
-                  ${is_scooter_trail ? this._renderInlineSvgBadge("Scooter", "is_scooter_trail", tint) : html``}
+                  ${has_skating ? this._renderInlineSvgBadge(BADGES["has_skating"], "has_skating", tint) : html``}
+                  ${has_classic ? this._renderInlineSvgBadge(BADGES["has_classic"], "has_classic", tint) : html``}
+                  ${is_scooter_trail ? this._renderInlineSvgBadge(BADGES["is_scooter_trail"], "is_scooter_trail", tint) : html``}
   
                   ${has_floodlight
                     ? html`
                         <span class="badge" title="Floodlight">
                           <ha-icon icon=${this._config.floodlight_icon}></ha-icon>
-                          <span>Floodlight</span>
+                          ${this._config.show_badge_text ? html`<span>${BADGES["has_floodlight"]}</span>` : html``}
                         </span>
                       `
                     : html``}
@@ -562,7 +604,7 @@ class DeviceSensorsBadgesCard extends LitElement {
   }
 }
 
-customElements.define(CARD_TAG, DeviceSensorsBadgesCard);
+customElements.define(CARD_TAG, SporetCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -570,4 +612,100 @@ window.customCards.push({
   name: "Sporet.no Card",
   description: "Shows colored status for Slopes from Sporet.no",
 });
+
+
+// ---------- Card Editor (GUI config) ----------
+
+const fireEvent = (node, type, detail = {}, options = {}) => {
+  node.dispatchEvent(
+    new CustomEvent(type, {
+      detail,
+      bubbles: options.bubbles ?? true,
+      composed: options.composed ?? true,
+    })
+  );
+};
+
+class SporetCardEditor extends LitElement {
+  static get properties() {
+    return {
+      hass: {},
+      _config: { state: true },
+    };
+  }
+
+  setConfig(config) {
+    this._config = { ...config };
+  }
+
+  // Build a minimal schema for the UI editor.
+  // Device selector is filtered by integration domain "sporet".
+  // (If your integration domain is different, change it here.)
+  _schema() {
+    return [
+      {
+        name: "device_id",
+        required: true,
+        selector: { device: { integration: "sporet" } },
+      },
+      {
+        name: "tint_badges_with_primary_color",
+        selector: { boolean: {} },
+      },
+      {
+        name: "show_badge_text",
+        selector: { boolean: {} },
+      },
+      {
+        label: "Ikon for lysløype",
+        name: "floodlight_icon",
+        selector: { icon: {} },
+      },
+    ];
+  }
+
+  _computeLabel(schema) {
+    // schema.name is the key from _schema()
+    return UI_STRINGS.editor?.[schema.name] ?? schema.name;
+  }
+  _valueChanged(ev) {
+    if (!this._config) return;
+
+    const newConfig = { ...this._config, ...ev.detail.value };
+
+    // Lovelace requires "type" be present when saving from UI editor.
+    // Some HA flows pass it in, some don’t; ensure it’s set.
+    if (!newConfig.type) newConfig.type = CARD_TYPE;
+
+    this._config = newConfig;
+    fireEvent(this, "config-changed", { config: newConfig });
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+
+    const data = {
+      attributes_from: "primary",
+      tint_badges_with_primary_color: false,
+      show_badge_text: true,
+      floodlight_icon: "mdi:light-flood-down",
+      ...this._config,
+    };
+
+  return html`
+    <ha-form
+      .hass=${this.hass}
+      .data=${data}
+      .schema=${this._schema()}
+      .computeLabel=${this._computeLabel.bind(this)}
+      @value-changed=${this._valueChanged}
+    ></ha-form>
+  `;
+  }
+}
+
+customElements.define(
+  EDITOR_TAG,
+  SporetCardEditor
+);
 
