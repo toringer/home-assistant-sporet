@@ -60,7 +60,18 @@ Before setting up the integration, you need:
    - Log in to sporet.no
    - Open the network anaylser in the developer tools of the browser
    - Find the `details` traffic, find the `authorization` attribute in the header section
-   - Copy the token (remove the `Bearer` text)
+   - Copy the token
+
+> [!IMPORTANT]
+> Make sure you copy the entire token!
+>
+> Some browsers might truncate the Bearer Token when you copy it. Look for a switch to
+> "display raw headers" or similar which will ensure the entire string is available.
+
+Another option is to right click on one of the requests to `https://api.sporet.no` and look for
+**Copy Request Headers**, or **Copy as Curl** or something similar.  Paste the result into
+a plain text file and find the line starting with `Authorization:`.  Copy the entire line and 
+paste it into the Bearer Token field below.
 
 
 ### Setup Steps
@@ -69,11 +80,19 @@ Before setting up the integration, you need:
 2. Click **+ Add Integration**
 3. Search for "Sporet"
 4. Enter your configuration:
-   - **Ski Trail Slope ID**: The specific slope you want to monitor
    - **Bearer Token**: Your API authentication token
 5. Click **Submit**
 
-The integration will validate your credentials and create sensors for the specified slope.
+The integration will validate your credentials.
+
+After the main entry is created, you can add slopes and segments.
+
+1. Go to **Settings** → **Devices & Services**
+2. Find the "Sporet" integration
+3. Click the "+" sign next to "Add entry" in the Sporet Integration
+4. Add a Slope - either a "Share" link from the Slope or Segment or just the ID number
+
+The integration will create sensors for the specified slope.
 
 ## Sensors
 

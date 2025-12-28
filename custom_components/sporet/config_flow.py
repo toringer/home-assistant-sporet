@@ -8,12 +8,15 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     API_BASE_URL,
+    API_SEGMENT_URL,
     CONF_BEARER_TOKEN,
+    CONF_IS_SEGMENT,
     CONF_SLOPE_ID,
     DOMAIN,
 )
@@ -21,38 +24,79 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+def sanitize_bearer_token(bearer_token: str) -> str:
+    """Handle various permutations of the bearer token."""
+    bearer_token = " ".join(bearer_token.strip().split())
+    if bearer_token.lower().startswith("authorization"):
+        bearer_token = bearer_token.split(" ")[2].strip()
+    if bearer_token.lower().startswith("bearer"):
+        bearer_token = bearer_token.split(" ")[1].strip()
+    return bearer_token
+
+
+def sanitize_slope_id(slope_id: str) -> str:
+    """Allow user to paste the full URL to the slope."""
+    # Slope  : https://sporet.no/share/Slope/10490?name=Bergsj%C3%B8-Randan-Nysetlia
+    # Segment: https://sporet.no/share/SlopeSegment/131219?name=Segment
+    if slope_id.lower().startswith("https:"):
+        slope_id = slope_id.split("/")[5].split("?")[0].strip()
+    return slope_id
+
+
+async def validate_input(hass: HomeAssistant, bearer_token: str, slope_id: str) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    bearer_token = data[CONF_BEARER_TOKEN]
-    slope_id = data[CONF_SLOPE_ID]
+    # bearer_token = data.get(CONF_BEARER_TOKEN, token)
+    # slope_id = data[CONF_SLOPE_ID]
 
     session = async_get_clientsession(hass)
-    url = f"{API_BASE_URL}/{slope_id}/details"
+    slope_url = f"{API_BASE_URL}/{slope_id}/details"
+    segment_url = f"{API_SEGMENT_URL}/{slope_id}/details"
 
     headers = {
         "Authorization": f"Bearer {bearer_token}",
         "Content-Type": "application/json",
     }
 
+    is_segment = False
     try:
-        async with session.get(url, headers=headers) as response:
+        async with session.get(slope_url, headers=headers) as response:
+            _LOGGER.debug(f"Trying to get {slope_url}")
             if response.status == 401:
+                _LOGGER.error(f"Error 401 for {slope_url}")
                 raise InvalidAuth
-            response.raise_for_status()
-            api_data = await response.json()
+            elif response.status == 404:
+                _LOGGER.info(f"Error 404 for {slope_url} - trying again with {segment_url}")
+                # Try again with segment URL
+                async with session.get(segment_url, headers=headers) as response:
+                    if response.status == 401:
+                        _LOGGER.error(f"Error 401 for {segment_url}")
+                        raise InvalidAuth
+                    _LOGGER.debug(f"Response {response.status} from {segment_url}")
+                    response.raise_for_status()
+                    api_data = await response.json()
+                    is_segment = True
+            else:
+                _LOGGER.debug(f"Response {response.status} from {slope_url}")
+                response.raise_for_status()
+                api_data = await response.json()
 
+            _LOGGER.debug(api_data)
             # Extract data from the new API structure (top-level fields)
-            slope_name = api_data.get("name")
-            route_api_id = api_data.get("id")
+            slope_name = api_data.get("name", f"Segment {api_data.get('selectedSegment', {}).get('id')}")
+            if is_segment:
+                route_api_id = api_data.get("selectedSegment", {}).get("id")
+            else:
+                route_api_id = api_data.get("id")
 
             # Verify the route exists and ID matches
-            if not slope_name or route_api_id != int(slope_id):
+            if route_api_id != int(slope_id):
                 raise CannotConnect
 
             # Return route name for display
             return {
                 "title": slope_name,
                 "slope_name": slope_name,
+                CONF_IS_SEGMENT: is_segment,
             }
 
     except aiohttp.ClientResponseError as err:
@@ -76,8 +120,11 @@ class SporetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_BEARER_TOKEN] = sanitize_bearer_token(user_input[CONF_BEARER_TOKEN])
+
             try:
-                info = await validate_input(self.hass, user_input)
+                # Test with a "dummy" slope ID
+                info = await validate_input(self.hass, bearer_token=user_input[CONF_BEARER_TOKEN], slope_id=10000)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -87,17 +134,17 @@ class SporetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Set unique ID based on slope_id
-                await self.async_set_unique_id(user_input[CONF_SLOPE_ID])
+                await self.async_set_unique_id(user_input[CONF_NAME])
                 self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
-                    title=info["title"],
+                    title=user_input[CONF_NAME],
                     data=user_input,
                 )
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_SLOPE_ID): str,
+                vol.Required(CONF_NAME, default="Sporet.no"): str,
+                # vol.Required(CONF_SLOPE_ID): str,
                 vol.Required(CONF_BEARER_TOKEN): str,
             }
         )
@@ -117,6 +164,15 @@ class SporetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return SporetOptionsFlowHandler()
 
 
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: config_entries.ConfigEntry
+    ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"slope": SporetSubentryFlowHandler}
+
+
 class SporetOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Sporet options."""
 
@@ -128,13 +184,11 @@ class SporetOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             # Validate the new bearer token
-            test_data = {
-                CONF_SLOPE_ID: self.config_entry.data[CONF_SLOPE_ID],
-                CONF_BEARER_TOKEN: user_input[CONF_BEARER_TOKEN],
-            }
+            user_input[CONF_BEARER_TOKEN] = sanitize_bearer_token(user_input[CONF_BEARER_TOKEN])
 
             try:
-                await validate_input(self.hass, test_data)
+                # Test with a "dummy" slope ID
+                await validate_input(self.hass, bearer_token=user_input[CONF_BEARER_TOKEN], slope_id=10000)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -147,7 +201,6 @@ class SporetOptionsFlowHandler(config_entries.OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data={
-                        **self.config_entry.data,
                         CONF_BEARER_TOKEN: user_input[CONF_BEARER_TOKEN],
                     },
                 )
@@ -168,6 +221,54 @@ class SporetOptionsFlowHandler(config_entries.OptionsFlow):
             errors=errors,
         )
 
+
+class SporetSubentryFlowHandler(config_entries.ConfigSubentryFlow):
+    """Handle subentry flow for adding and modifying a slope."""
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.SubentryFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            user_input[CONF_SLOPE_ID] = sanitize_slope_id(user_input[CONF_SLOPE_ID])
+
+            # Set unique ID based on slope_id
+            unique_id = f"{self._get_entry().data[CONF_NAME]}_{user_input[CONF_SLOPE_ID]}"
+
+            for existing_subentry in self._get_entry().subentries.values():
+                if existing_subentry.unique_id == unique_id:
+                    errors[CONF_SLOPE_ID] = "already_configured"
+
+            if not errors:
+                try:
+                    info = await validate_input(self.hass, slope_id=user_input[CONF_SLOPE_ID], bearer_token=self._get_entry().data[CONF_BEARER_TOKEN])
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except InvalidAuth:
+                    errors["base"] = "invalid_auth"
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    user_input[CONF_IS_SEGMENT] = info[CONF_IS_SEGMENT]
+                    return self.async_create_entry(
+                        title=info["title"],
+                        data=user_input,
+                        unique_id=unique_id,
+                    )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_SLOPE_ID): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
 class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
