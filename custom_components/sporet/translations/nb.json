@@ -19,22 +19,25 @@
         }
     },
     "config_subentries": {
-        "step": {
-            "user": {
-                "title": "Legg til løype",
-                "description": "Lim inn 'Del' lenken fra en Løype eller Løypestrekning fra Sporet.no.",
-                "data": {
-                    "slope_id": "Skiløype-ID"
+        "slope": {
+            "title": "Løyper og strekninger",
+            "step": {
+                "user": {
+                    "title": "Legg til løype",
+                    "description": "Lim inn 'Del' lenken fra en Løype eller Løypestrekning fra Sporet.no.",
+                    "data": {
+                        "slope_id": "Skiløype-ID"
+                    }
                 }
+            },
+            "error": {
+                "cannot_connect": "Kunne ikke koble til Sporet API. Vennligst sjekk internettforbindelsen din og prøv igjen.",
+                "invalid_auth": "Ugyldig bearer token. Vennligst sjekk token og prøv igjen.",
+                "unknown": "Uventet feil oppstod. Vennligst sjekk loggene for mer informasjon."
+            },
+            "abort": {
+                "already_configured": "Denne ruten er allerede konfigurert."
             }
-        },
-        "error": {
-            "cannot_connect": "Kunne ikke koble til Sporet API. Vennligst sjekk internettforbindelsen din og prøv igjen.",
-            "invalid_auth": "Ugyldig bearer token. Vennligst sjekk token og prøv igjen.",
-            "unknown": "Uventet feil oppstod. Vennligst sjekk loggene for mer informasjon."
-        },
-        "abort": {
-            "already_configured": "Denne ruten er allerede konfigurert."
         }
     },
     "options": {

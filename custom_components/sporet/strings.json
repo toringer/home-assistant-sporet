@@ -19,22 +19,25 @@
     }
   },
   "config_subentries": {
-    "step": {
-      "user": {
-        "title": "Add slope",
-        "description": "Get the 'Share' link from a Slope or Segment at Sporet.no.",
-        "data": {
-          "slope_id": "Slope ID or Share Link"
+    "slope": {
+      "title": "Slopes and segments",
+      "step": {
+        "user": {
+          "title": "Add slope",
+          "description": "Get the 'Share' link from a Slope or Segment at Sporet.no.",
+          "data": {
+            "slope_id": "Slope ID or Share Link"
+          }
         }
+      },
+      "error": {
+        "cannot_connect": "Failed to connect to the Sporet API. Please check your internet connection and try again.",
+        "invalid_auth": "Invalid bearer token. Please check your token and try again.",
+        "unknown": "Unexpected error occurred. Please check the logs for more details."
+      },
+      "abort": {
+        "already_configured": "This slope is already configured."
       }
-    },
-    "error": {
-      "cannot_connect": "Failed to connect to the Sporet API. Please check your internet connection and try again.",
-      "invalid_auth": "Invalid bearer token. Please check your token and try again.",
-      "unknown": "Unexpected error occurred. Please check the logs for more details."
-    },
-    "abort": {
-      "already_configured": "This slope is already configured."
     }
   },
   "options": {
