@@ -21,6 +21,9 @@
   "config_subentries": {
     "slope": {
       "entry_type": "Slopes and segments",
+      "initiate_flow": {
+          "user": "Add new slope or segment"
+      },
       "step": {
         "user": {
           "title": "Add slope",

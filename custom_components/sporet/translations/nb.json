@@ -21,9 +21,12 @@
     "config_subentries": {
         "slope": {
             "entry_type": "Løyper og strekninger",
+            "initiate_flow": {
+                "user": "Legg til løype eller strekning"
+            },
             "step": {
                 "user": {
-                    "title": "Legg til løype",
+                    "title": "Legg til løype eller strekning",
                     "description": "Lim inn 'Del' lenken fra en Løype eller Løypestrekning fra Sporet.no.",
                     "data": {
                         "slope_id": "Skiløype-ID"
