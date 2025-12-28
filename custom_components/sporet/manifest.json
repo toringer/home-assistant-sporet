@@ -1,15 +1,15 @@
 {
+    "domain": "sporet",
+    "name": "Sporet",
     "codeowners": [
         "@toringer"
     ],
     "config_flow": true,
     "dependencies": [],
     "documentation": "https://github.com/yourusername/home-assistant-sporet",
-    "domain": "sporet",
     "homekit": {},
     "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/yourusername/home-assistant-sporet/issues",
-    "name": "Sporet",
     "requirements": [],
     "ssdp": [],
     "version": "v0.2.0",
