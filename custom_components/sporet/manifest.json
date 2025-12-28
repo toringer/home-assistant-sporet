@@ -12,6 +12,6 @@
     "issue_tracker": "https://github.com/yourusername/home-assistant-sporet/issues",
     "requirements": [],
     "ssdp": [],
-    "version": "v0.2.0",
+    "version": "1.0.0",
     "zeroconf": []
 }

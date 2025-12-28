@@ -20,7 +20,7 @@
   },
   "config_subentries": {
     "slope": {
-      "title": "Slopes and segments",
+      "entry_type": "Slopes and segments",
       "step": {
         "user": {
           "title": "Add slope",
