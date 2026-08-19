@@ -178,6 +178,19 @@ Each sensor includes additional attributes with detailed route information:
 - `totalElevationLoss`: Total elevation loss in meters
 - `parts`: (prep_symbol_parts sensor only) Array of segment-level prep symbols with percentages
 
+## Sporet Card
+
+A Lovelace card for showing trail status lives in its own repository, so it can
+be installed straight from HACS:
+
+**[Olen/lovelace-sporet-card](https://github.com/Olen/lovelace-sporet-card)**
+
+It shows how recently a trail was groomed, when it was last prepared, how long
+it is, and what it is groomed for - classic, skating, floodlit or snowmobile.
+
+Add it in HACS via **Frontend > Custom repositories** with the category
+**Dashboard**, then pick a trail in the card editor.
+
 ## Updating Bearer Token
 
 If your bearer token expires or needs to be updated:
