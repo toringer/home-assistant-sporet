@@ -74,6 +74,12 @@
             },
             "prep_symbol": {
                 "name": "Prepareringssymbol"
+            },
+            "slope_id": {
+                "name": "Løype-ID"
+            },
+            "segment_id": {
+                "name": "Segment-ID"
             }
         }
     }

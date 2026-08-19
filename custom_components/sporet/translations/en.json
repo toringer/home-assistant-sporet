@@ -74,6 +74,12 @@
       },
       "prep_symbol": {
         "name": "Prep Symbol"
+      },
+      "slope_id": {
+        "name": "Slope ID"
+      },
+      "segment_id": {
+        "name": "Segment ID"
       }
     }
   }

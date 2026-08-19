@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback, AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -23,14 +24,23 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_DESCRIPTIONS = [
     SensorEntityDescription(
         key="prepped_time",
-        name="Prepped Time",
+        translation_key="prepped_time",
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="prep_symbol",
-        name="Prep Symbol",
+        translation_key="prep_symbol",
         icon="mdi:snowflake",
+    ),
+    # The id is what you need to reference a trail elsewhere - in a card, a
+    # template or a bug report - and it is otherwise only visible in the URL
+    # you copied it from.
+    SensorEntityDescription(
+        key="slope_id",
+        translation_key="slope_id",
+        icon="mdi:identifier",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
@@ -56,6 +66,11 @@ async def async_setup_entry(
 class SporetSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Sporet sensor."""
 
+    # Home Assistant composes "<device> <entity>" itself, so the entity is
+    # named only for what it measures. Renaming the device then renames its
+    # entities with it, which is what a user expects after renaming a trail.
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SporetDataUpdateCoordinator,
@@ -70,17 +85,9 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{subentry_id}-{description.key}"
         self._attr_attribution = ATTRIBUTION
         self._subentry_id = subentry_id
+        if description.key == "slope_id" and coordinator.is_segment:
+            self._attr_translation_key = "segment_id"
         _LOGGER.debug(f"Setting up Sporet-sensor uid {self._attr_unique_id}")
-
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        if self.coordinator.data is None:
-            return f"Sporet {self._slope_id} {self.entity_description.name}"
-
-        slope_name = self.coordinator.data.get("slope_name", "Unknown")
-        return f"{slope_name} {self.entity_description.name}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -100,6 +107,10 @@ class SporetSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | datetime | None:
         """Return the state of the sensor."""
+        if self.entity_description.key == "slope_id":
+            # Known from the config, so it is there before the first update
+            return self._slope_id
+
         if self.coordinator.data is None:
             return None
 
